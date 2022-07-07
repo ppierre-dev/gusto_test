@@ -14,12 +14,13 @@
           <input @change="addFile" type="file" class="hidden" id="hiddenFileButton">
       </div>
   </div>
-    <UploadingPage v-if="isUploading" :progress="uploadProgess" />
-    <UploadEnded v-if="uploadEnded" :uploadedImg="file"/>
+    <UploadingPage v-if="isUploading" />
+    <UploadEnded v-if="uploadEnded" />
 </template>
 
 <script>
 import axios from "axios";
+import {mapGetters, mapActions} from "vuex";
 import UploadingPage from "@/views/UploadingPage.vue";
 import UploadEnded from "@/views/UploadEnded.vue";
 
@@ -31,10 +32,8 @@ export default {
     }, 
     data() {
         return {
-            file: null,
             isUploading: false,
             uploadEnded: false,
-            uploadProgess: 0
         }
     },
     mounted() {
@@ -45,27 +44,29 @@ export default {
             })
         })
     },
+    computed: {
+        ...mapGetters(["getFile"]),
+    },
     methods: {
+        ...mapActions(["setFile", "setUploadProgress"]),
         openFileDialog() { // Ouvrir le gestionnaire de fichier pour séléctionner une image
             const fileButton = document.getElementById("hiddenFileButton");
             fileButton.click();
         },
         addFile(event) {
-            let file;
             if (event.dataTransfer) { // Si c'est par drag'n drop
-                file = event.dataTransfer.files[0];
+                this.setFile(event.dataTransfer.files[0])
             } else { // Si c'est par le biais des boutons
                 const fileButton = document.getElementById("hiddenFileButton");
-                file = fileButton.files[0];
+                this.setFile(fileButton.files[0])
             }
             this.isUploading = true;
             const formData = new FormData();
-            formData.append("file", file);
-            this.file = file;
+            formData.append("file", this.getFile);
             axios.post("http://localhost:4000/upload", formData, {
-                onUploadProgress: Progess => {
-                    let progess = Math.round((Progess.loaded / Progess.total) * 100); // Etat de l'upload, ici quasi instantané car en local
-                    this.uploadProgess = progess;
+                onUploadProgress: Progress => {
+                    let progress = Math.round((Progress.loaded / Progress.total) * 100); // Etat de l'upload, ici quasi instantané car en local
+                    this.setUploadProgress(progress);
                 }
             }).then(() => { // réussite
                 this.isUploading = false;

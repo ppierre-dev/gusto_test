@@ -4,15 +4,18 @@
           <h1 class="font-bold">Uploading...</h1>
       </div>
       <div>
-          <p>{{progress}} %</p>
+          <p>{{getUploadProgress}} %</p>
       </div>
   </div>
 </template>
 
 <script>
+import {mapGetters} from "vuex";
 export default {
     name: "UploadingPage",
-    props: ["progress"]
+    computed: {
+        ...mapGetters(["getUploadProgress"]),
+    }
 }
 </script>
 
